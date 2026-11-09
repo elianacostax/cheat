@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Message, Profile } from '@/types/database';
 import Avatar from '@/components/Avatar';
 import LogoutButton from '@/components/LogoutButton';
+import { getLastRead, markRead } from '@/lib/read-state';
 import { Plus, Trash2 } from 'lucide-react';
 
 export default function ChatList() {
@@ -21,6 +22,11 @@ export default function ChatList() {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'conversation_participants' },
+        load
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages' },
         load
       )
       .subscribe();
@@ -78,10 +84,26 @@ export default function ChatList() {
           other = (prof ?? null) as unknown as Profile | null;
         }
 
+        let unread = 0;
+        const lastRead = getLastRead(me.user.id, c.id);
+        if (!lastRead) {
+          // Primera vez que vemos esta conversación: se marca como leída.
+          markRead(me.user.id, c.id, last?.created_at ?? new Date().toISOString());
+        } else {
+          const { count } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('conversation_id', c.id)
+            .neq('sender_id', me.user.id)
+            .gt('created_at', lastRead);
+          unread = count ?? 0;
+        }
+
         return {
           ...c,
           lastMessage: last,
           other,
+          unread,
         };
       })
     );
@@ -163,20 +185,31 @@ export default function ChatList() {
                 >
                   <Avatar name={c.other?.username ?? 'U'} src={c.other?.avatar_url} />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline justify-between gap-3">
+                    <div className="flex items-center justify-between gap-3">
                       <span className="font-medium text-paper truncate">
                         {c.is_group ? c.name : c.other?.username || 'Usuario'}
                       </span>
-                      {c.lastMessage && (
-                        <span className="text-xs text-faint shrink-0">
-                          {new Date(c.lastMessage.created_at).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {c.unread > 0 && (
+                          <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-brass text-ink text-[10px] font-bold flex items-center justify-center">
+                            {c.unread > 9 ? '9+' : c.unread}
+                          </span>
+                        )}
+                        {c.lastMessage && (
+                          <span className="text-xs text-faint">
+                            {new Date(c.lastMessage.created_at).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-sm text-muted truncate mt-0.5">
+                    <p
+                      className={`text-sm truncate mt-0.5 ${
+                        c.unread > 0 ? 'text-paper/80' : 'text-muted'
+                      }`}
+                    >
                       {c.lastMessage
                         ? c.lastMessage.media_type === 'text'
                           ? c.lastMessage.content

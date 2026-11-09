@@ -12,6 +12,7 @@ import { createBrowserClient } from '@/lib/supabase/browser';
 import Avatar from '@/components/Avatar';
 import BackButton from '@/components/BackButton';
 import LogoutButton from '@/components/LogoutButton';
+import { markRead } from '@/lib/read-state';
 import type { Profile } from '@/types/database';
 
 export default function ChatPage() {
@@ -54,6 +55,11 @@ export default function ChatPage() {
       setOther((p ?? null) as unknown as Profile | null);
     })();
   }, [profile, id]);
+
+  useEffect(() => {
+    if (!profile?.id || messages.length === 0) return;
+    markRead(profile.id, id as string, messages[messages.length - 1].created_at);
+  }, [profile?.id, id, messages]);
 
   if (loading || msgLoading) {
     return (

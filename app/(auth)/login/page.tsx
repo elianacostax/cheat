@@ -25,9 +25,9 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-ink px-4">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-brass/10 border border-brass/25 flex items-center justify-center shadow-glow mb-4">
-            <span className="font-display text-brass text-2xl font-semibold leading-none">C</span>
-          </div>
+          <span className="font-display text-brass text-3xl font-semibold tracking-tight mb-4">
+            Charliana
+          </span>
           <h1 className="font-display text-3xl text-paper tracking-tight">Bienvenido</h1>
           <p className="text-sm text-muted mt-2">Ingresa a tu cuenta para continuar</p>
         </div>

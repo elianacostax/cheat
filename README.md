@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Chat en tiempo real (PWA)
 
-## Getting Started
+App de chat móvil en tiempo real: autenticación segura, mensajes en vivo, fotos/audio/GIFs, instalable en el celular. Despliegue gratuito en Vercel + Supabase.
 
-First, run the development server:
+## Stack
+- **Next.js 16** (App Router, Turbopack) + Tailwind CSS
+- **Supabase**: Auth, Base de datos (Postgres + RLS), Realtime (websockets), Storage (fotos/audio/GIFs)
+- **PWA**: manifest + service worker (instalable en Android/iOS)
+- Despliegue: **Vercel** (gratis)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Estructura
+```
+app/
+  (auth)/login, (auth)/register   -> registro e inicio de sesión
+  dashboard/                      -> layout protegido (sidebar + salir)
+  chat/                           -> lista de conversaciones
+  chat/[id]/                      -> chat en tiempo real
+  api/join/                       -> unir usuario a conversación
+lib/supabase/                     -> clientes Supabase (servidor/navegador)
+hooks/                            -> useProfile, useChat (Realtime)
+components/Chat/                  -> MessageList, MessageBubble, MessageInput
+components/MediaUploader.tsx      -> subida de foto/audio/GIF a Supabase Storage
+public/                           -> manifest.json, sw.js, favicon.svg (PWA)
+supabase/schema.sql               -> esquema BD y políticas RLS
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 1. Crear proyecto en Supabase
+1. Ve a [supabase.com](https://supabase.com) y crea un proyecto gratuito.
+2. En **SQL Editor**, pega y ejecuta el contenido de `supabase/schema.sql` (crea tablas, RLS y políticas).
+3. En **Storage > Buckets**, crea un bucket público llamado `chat-media` (para fotos, audio y GIFs).
+4. En **Database > Realtime**, activa la replicación para las tablas: `messages`, `conversations`, `conversation_participants`, `profiles`.
+5. En **Settings > API**, copia la **Project URL** y la **anon public** key.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 2. Variables de entorno
+Copia `.env.example` a `.env` (local) y rellena con tus valores de Supabase:
+```
+NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 3. Despliegue en Vercel (gratis)
+1. Sube este código a un repositorio de GitHub.
+2. Ve a [vercel.com](https://vercel.com), importa el repositorio.
+3. En **Settings > Environment Variables** agrega las dos variables de Supabase (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
+4. Despliega. La app estará en `https://tu-app.vercel.app`.
 
-## Learn More
+## 4. Instalar en el celular (PWA)
+- **Android (Chrome):** abre la URL, menú ⋮ > "Agregar a la pantalla de inicio".
+- **iOS (Safari):** abre la URL, botón de compartir > "A en la pantalla de inicio".
 
-To learn more about Next.js, take a look at the following resources:
+La app usa service worker para funcionar sin conexión (caché básica) y se ve como una app nativa (sin barra del navegador).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Seguridad
+- Autenticación con Supabase Auth (email + contraseña, mín. 6 caracteres).
+- Row Level Security (RLS): los usuarios solo leen/escriben sus propios datos y conversaciones a las que pertenecen.
+- Los medios se suben a un bucket público y se almacenan con nombres aleatorios (`uuid`).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Limitaciones conocidas (scope inicial)
+- Las conversaciones 1 a 1 se crean al hacer "Nuevo chat" (no hay lista de contactos ni búsqueda de usuarios por nombre).
+- Los grupos no están implementados (solo 1 a 1).
+- El service worker cachea solo la shell básica; los mensajes en vivo requieren conexión.

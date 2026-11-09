@@ -1,26 +1,95 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --color-ink: #0a0a0e;
+  --color-surface: #121218;
+  --color-raised: #1a1a23;
+  --color-overlay: #22222d;
+  --color-paper: #f4f1ea;
+  --color-muted: #8e8a82;
+  --color-faint: #5c5952;
+  --color-brass: #d4a24c;
+  --color-brass-bright: #e8bc6a;
+  --color-own: #1e1e28;
+  --color-other: #16161e;
+  --color-presence: #6fcf7f;
+  --color-line: rgba(255, 255, 255, 0.07);
+  --color-line-strong: rgba(255, 255, 255, 0.12);
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-instrument-sans), system-ui, sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.25);
+  --shadow-glow: 0 0 0 1px rgba(212, 162, 76, 0.35), 0 0 24px rgba(212, 162, 76, 0.12);
+
+  --animate-message-in: message-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes message-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.99);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    background: var(--color-ink);
+    color: var(--color-paper);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: rgba(212, 162, 76, 0.28);
+    color: #fff;
+  }
+}
+
+@layer utilities {
+  .bg-ambient {
+    background-image:
+      radial-gradient(900px 500px at 15% -10%, rgba(212, 162, 76, 0.06), transparent 60%),
+      radial-gradient(700px 400px at 110% 20%, rgba(212, 162, 76, 0.04), transparent 55%);
+  }
+}
+
+/* Thin, dim scrollbars that match the noir palette */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

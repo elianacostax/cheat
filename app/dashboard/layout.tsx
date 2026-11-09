@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { MessageCircle, Users } from 'lucide-react';
 import LogoutButton from '@/components/LogoutButton';
+import Notifications from '@/components/Notifications';
 
 function NavItem({
   href,
@@ -35,6 +36,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <NavItem href="/users" icon={<Users size={20} />} label="Gente" />
         </div>
 
+        <Notifications />
         <LogoutButton />
       </nav>
 
